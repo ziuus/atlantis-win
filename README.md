@@ -8,7 +8,6 @@ Physical optical **Liquid Glass** Dynamic Island & desktop shell for **Windows 1
 |---|---|
 | **Linux / Wayland** | [`ziuus/atlantis`](https://github.com/ziuus/atlantis) |
 | **Windows 10 / 11** | [`ziuus/atlantis-win`](https://github.com/ziuus/atlantis-win) |
-| **macOS** | [`ziuus/atlantis-mac`](https://github.com/ziuus/atlantis-mac) |
 | **Core Engine** | [`ziuus/liquid-glass`](https://github.com/ziuus/liquid-glass) |
 
 ## Quick Start (Windows)
