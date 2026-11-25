@@ -1,321 +1,188 @@
-//! Atlantis for Windows — Physical Optical Liquid Glass Dynamic Island & Desktop Shell.
-//! Powered by `liquid-glass` (glass-core + glass-platform) and `winit`.
+//! Atlantis for Windows — Full Multi-Widget Liquid Glass Desktop Shell.
+//! Parity shell with Linux Atlantis: Dynamic Island, 8-Box Control Hub, Tasks, Dock, and 2-Card Launcher.
 
-use chrono::{Local, Timelike};
-use glass_core::font::{FontWeight, UIFont};
-use glass_core::geometry::Shape;
-use glass_core::{GlassSurface, Material, SharedGpu, Tokens};
+use glass_core::font::UIFont;
+use glass_core::SharedGpu;
 use glass_platform::WallpaperManager;
-use std::sync::Arc;
 use std::time::{Duration, Instant};
-use sysinfo::System;
-use winit::dpi::{LogicalPosition, LogicalSize};
-use winit::event::{ElementState, Event, MouseButton, MouseScrollDelta, WindowEvent};
+use winit::event::{ElementState, Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
-use winit::window::{WindowBuilder, WindowLevel};
+use winit::keyboard::{Key, NamedKey};
 
-const WIN_W: u32 = 480;
-const WIN_H: u32 = 160;
-const PILL_W: f32 = 190.0;
-const PILL_H: f32 = 38.0;
-const EXP_W: f32 = 460.0;
-const EXP_H: f32 = 148.0;
+mod clock;
+mod dock;
+mod island;
+mod launcher;
+mod telemetry;
+mod todo;
+mod win_os;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Page {
-    Compact,
-    ControlCenter,
-    SystemOverview,
-}
-
-struct WinTelemetry {
-    sys: System,
-    cpu_pct: u32,
-    ram_used_gb: f32,
-    ram_total_gb: f32,
-    last_poll: Instant,
-}
-
-impl WinTelemetry {
-    fn new() -> Self {
-        let mut sys = System::new_all();
-        sys.refresh_all();
-        Self {
-            sys,
-            cpu_pct: 0,
-            ram_used_gb: 0.0,
-            ram_total_gb: 1.0,
-            last_poll: Instant::now() - Duration::from_secs(5),
-        }
-    }
-
-    fn poll(&mut self) {
-        if self.last_poll.elapsed() < Duration::from_millis(1200) {
-            return;
-        }
-        self.last_poll = Instant::now();
-        self.sys.refresh_cpu();
-        self.sys.refresh_memory();
-        self.cpu_pct = self.sys.global_cpu_info().cpu_usage().round() as u32;
-        self.ram_used_gb = self.sys.used_memory() as f32 / 1024.0 / 1024.0 / 1024.0;
-        self.ram_total_gb = (self.sys.total_memory() as f32 / 1024.0 / 1024.0 / 1024.0).max(0.1);
-    }
-}
-
-#[allow(clippy::too_many_arguments)]
-fn render_overlay(
-    buf: &mut [u8],
-    font: &UIFont,
-    w: u32,
-    h: u32,
-    cur_w: f32,
-    cur_h: f32,
-    page: Page,
-    telemetry: &WinTelemetry,
-    is_light: bool,
-) {
-    buf.fill(0);
-    let cx = (w as f32) * 0.5;
-    let cy = cur_h * 0.5 + 4.0;
-    let col_ink = if is_light {
-        [10, 14, 24, 255]
-    } else {
-        Tokens::TEXT_PRIMARY
-    };
-    let col_dim = if is_light {
-        [45, 60, 80, 190]
-    } else {
-        [210, 222, 240, 180]
-    };
-    let no_shadow = [0, 0, 0, 0];
-
-    match page {
-        Page::Compact => {
-            let now = Local::now();
-            let (_pm, hour) = now.hour12();
-            let ampm = if now.hour() >= 12 { "PM" } else { "AM" };
-            let time_s = format!("{}:{:02} {}", hour, now.minute(), ampm);
-            font.draw_text_centered_y(
-                buf,
-                w,
-                h,
-                &time_s,
-                cx - cur_w * 0.5 + 18.0,
-                cy,
-                12.5,
-                col_ink,
-                no_shadow,
-                FontWeight::SemiBold,
-            );
-            let cpu_s = format!("CPU {}%", telemetry.cpu_pct);
-            let cpu_w = font.measure_text(&cpu_s, 11.5, FontWeight::Medium);
-            font.draw_text_centered_y(
-                buf,
-                w,
-                h,
-                &cpu_s,
-                cx + cur_w * 0.5 - 18.0 - cpu_w,
-                cy,
-                11.5,
-                col_dim,
-                no_shadow,
-                FontWeight::Medium,
-            );
-        }
-        Page::ControlCenter => {
-            font.draw_text(
-                buf,
-                w,
-                h,
-                "ATLANTIS · WINDOWS",
-                cx - cur_w * 0.5 + 28.0,
-                24.0,
-                10.5,
-                col_dim,
-                FontWeight::SemiBold,
-            );
-            let hint = "Scroll or click to cycle · Right-click to collapse";
-            font.draw_text_centered(
-                buf,
-                w,
-                h,
-                hint,
-                cx,
-                84.0,
-                12.5,
-                col_ink,
-                no_shadow,
-                FontWeight::Medium,
-            );
-        }
-        Page::SystemOverview => {
-            font.draw_text(
-                buf,
-                w,
-                h,
-                "SYSTEM TELEMETRY",
-                cx - cur_w * 0.5 + 28.0,
-                24.0,
-                10.5,
-                col_dim,
-                FontWeight::SemiBold,
-            );
-            let stats = [
-                format!("CPU {}%", telemetry.cpu_pct),
-                format!(
-                    "RAM {:.1}/{:.0}G",
-                    telemetry.ram_used_gb, telemetry.ram_total_gb
-                ),
-            ];
-            for (i, s) in stats.iter().enumerate() {
-                let tx = cx - 95.0 + (i as f32) * 190.0;
-                font.draw_text_centered(
-                    buf,
-                    w,
-                    h,
-                    s,
-                    tx,
-                    84.0,
-                    15.0,
-                    col_ink,
-                    no_shadow,
-                    FontWeight::SemiBold,
-                );
-            }
-        }
-    }
-}
+use clock::ClockWindow;
+use dock::DockWindow;
+use island::{IslandAction, IslandWindow};
+use launcher::LauncherWindow;
+use telemetry::SysStats;
+use todo::TodoWindow;
 
 fn main() {
-    let event_loop = EventLoop::new().expect("Failed to create EventLoop");
-    let window = Arc::new(
-        WindowBuilder::new()
-            .with_title("Atlantis Windows Island")
-            .with_inner_size(LogicalSize::new(WIN_W, WIN_H))
-            .with_decorations(false)
-            .with_transparent(true)
-            .with_window_level(WindowLevel::AlwaysOnTop)
-            .build(&event_loop)
-            .expect("Failed to create overlay window"),
+    UIFont::set_global_scale(1.12);
+    let event_loop = EventLoop::new().expect("create winit event loop");
+    let gpu = pollster::block_on(SharedGpu::new()).expect("init SharedGpu");
+
+    let (screen_w, screen_h) = event_loop
+        .primary_monitor()
+        .or_else(|| event_loop.available_monitors().next())
+        .map(|m| {
+            let s = m.size();
+            (s.width.max(1280), s.height.max(720))
+        })
+        .unwrap_or((1920, 1080));
+
+    let mut wallpaper_mgr = WallpaperManager::new();
+    let _ = wallpaper_mgr.check_update();
+    let wp_buf = wallpaper_mgr.cached_buffer().map(|v| v.to_vec());
+    let is_light = wp_buf
+        .as_deref()
+        .map(|b| WallpaperManager::is_buffer_light_hysteresis(b, false))
+        .unwrap_or(false);
+    wallpaper_mgr.release_full_buffer();
+
+    let mut stats = SysStats::new();
+    let mut island = IslandWindow::new(&event_loop, &gpu, screen_w, wp_buf.as_deref(), is_light);
+    let mut clock = ClockWindow::new(&event_loop, &gpu, wp_buf.as_deref(), is_light);
+    let mut todo = TodoWindow::new(&event_loop, &gpu, screen_w, wp_buf.as_deref(), is_light);
+    let mut dock = DockWindow::new(&event_loop, &gpu, screen_w, screen_h, wp_buf.as_deref(), is_light);
+    let mut launcher = LauncherWindow::new(
+        &event_loop,
+        &gpu,
+        screen_w,
+        screen_h,
+        wp_buf.as_deref(),
+        is_light,
     );
 
-    if let Some(mon) = window.current_monitor() {
-        let sz = mon.size();
-        let x = (sz.width as i32 - WIN_W as i32) / 2;
-        window.set_outer_position(LogicalPosition::new(x.max(0), 6));
-    }
+    let mut last_frame = Instant::now();
+    let mut last_overlap_check = Instant::now() - Duration::from_secs(10);
 
-    let gpu = pollster::block_on(SharedGpu::new()).expect("Failed to initialize WGPU");
-    let mut renderer = gpu
-        .create_renderer(window.clone(), WIN_W, WIN_H)
-        .expect("Failed to create GlassRenderer");
-
-    let wp_mgr = WallpaperManager::new();
-    let mut is_light = false;
-    if let Some(cache) = wp_mgr.cached_buffer() {
-        let crop = WallpaperManager::get_wallpaper_crop(cache, 720, 0, WIN_W, WIN_H);
-        is_light = WallpaperManager::is_buffer_light_hysteresis(&crop, false);
-        renderer.update_background(WIN_W, WIN_H, &crop);
-    }
-
-    let font = UIFont::new();
-    let mut overlay = vec![0u8; (WIN_W * WIN_H * 4) as usize];
-    let mut telemetry = WinTelemetry::new();
-    let mut page = Page::Compact;
-    let mut cur_w = PILL_W;
-    let mut cur_h = PILL_H;
-
-    let _ = event_loop.run(move |event, elwt| {
-        elwt.set_control_flow(ControlFlow::WaitUntil(
-            Instant::now() + Duration::from_millis(16),
-        ));
-        match event {
-            Event::WindowEvent {
-                event: WindowEvent::CloseRequested,
-                ..
-            } => elwt.exit(),
-            Event::WindowEvent {
-                event:
-                    WindowEvent::MouseInput {
-                        state: ElementState::Pressed,
-                        button,
-                        ..
-                    },
-                ..
-            } => {
-                page = match (button, page) {
-                    (MouseButton::Right, _) => Page::Compact,
-                    (_, Page::Compact) => Page::SystemOverview,
-                    (_, Page::SystemOverview) => Page::ControlCenter,
-                    (_, Page::ControlCenter) => Page::Compact,
-                };
-                window.request_redraw();
+    let _ = event_loop.run(move |event, elwt| match event {
+        Event::WindowEvent { window_id, event } => {
+            if let WindowEvent::CloseRequested = event {
+                elwt.exit();
+                return;
             }
-            Event::WindowEvent {
-                event:
-                    WindowEvent::MouseWheel {
-                        delta: MouseScrollDelta::LineDelta(_, y),
-                        ..
-                    },
-                ..
-            } if y.abs() > 0.1 => {
-                page = match page {
-                    Page::Compact => Page::SystemOverview,
-                    Page::SystemOverview => Page::ControlCenter,
-                    Page::ControlCenter => Page::Compact,
-                };
-                window.request_redraw();
+            if let WindowEvent::KeyboardInput { event: ref ke, .. } = event {
+                if ke.state == ElementState::Pressed
+                    && ke.logical_key == Key::Named(NamedKey::F2)
+                {
+                    launcher.toggle();
+                    return;
+                }
             }
-            Event::AboutToWait => {
-                telemetry.poll();
-                let (tw, th) = match page {
-                    Page::Compact => (PILL_W, PILL_H),
-                    _ => (EXP_W, EXP_H),
-                };
-                cur_w += (tw - cur_w) * 0.22;
-                cur_h += (th - cur_h) * 0.22;
-                window.request_redraw();
-            }
-            Event::WindowEvent {
-                event: WindowEvent::RedrawRequested,
-                ..
-            } => {
-                render_overlay(
-                    &mut overlay,
-                    &font,
-                    WIN_W,
-                    WIN_H,
-                    cur_w,
-                    cur_h,
-                    page,
-                    &telemetry,
-                    is_light,
-                );
-                renderer.update_overlay(WIN_W, WIN_H, &overlay);
-                let w_norm = cur_w / (WIN_W as f32);
-                let h_norm = cur_h / (WIN_H as f32);
-                let shape = if page == Page::Compact {
-                    Shape::Capsule
-                } else {
-                    Shape::RoundedRectangle {
-                        radius: Tokens::RADIUS_OUTER,
+            if window_id == launcher.window.id() {
+                launcher.handle_event(&event);
+            } else if window_id == island.window.id() {
+                match island.handle_event(&event, &mut stats) {
+                    IslandAction::ToggleEco(ps) => {
+                        clock.power_save = ps;
+                        todo.power_save = ps;
+                        dock.power_save = ps;
+                        launcher.power_save = ps;
+                        island.renderer.set_power_save(ps);
+                        clock.renderer.set_power_save(ps);
+                        todo.renderer.set_power_save(ps);
+                        dock.renderer.set_power_save(ps);
+                        launcher.renderer.set_power_save(ps);
+                        island.needs_redraw = true;
+                        clock.needs_redraw = true;
+                        todo.needs_redraw = true;
+                        dock.needs_redraw = true;
                     }
-                };
-                let surface = GlassSurface::new()
-                    .material(Material::LiquidGlass)
-                    .shape(shape)
-                    .bounds(0.5 - w_norm * 0.5, 4.0 / (WIN_H as f32), w_norm, h_norm)
-                    .bevel(16.0)
-                    .refraction(18.0)
-                    .dispersion(0.12)
-                    .specular(1.15)
-                    .fresnel(0.60)
-                    .style_mode(2.0)
-                    .tint(0.0, 0.0, 1.0, if is_light { 1.0 } else { 0.0 })
-                    .element_type(27.0);
-                let _ = renderer.render(&[surface]);
+                    IslandAction::ToggleAppBg(ab) => {
+                        clock.app_backdrop_solid = ab;
+                        todo.app_backdrop_solid = ab;
+                        dock.app_backdrop_solid = ab;
+                        launcher.app_backdrop_solid = ab;
+                        clock.needs_redraw = true;
+                        todo.needs_redraw = true;
+                        dock.needs_redraw = true;
+                    }
+                    IslandAction::CycleTheme(tm) => {
+                        clock.theme_mode = tm;
+                        todo.theme_mode = tm;
+                        dock.theme_mode = tm;
+                        launcher.theme_mode = tm;
+                        clock.needs_redraw = true;
+                        todo.needs_redraw = true;
+                        dock.needs_redraw = true;
+                    }
+                    IslandAction::ToggleLauncher => launcher.toggle(),
+                    IslandAction::None => {}
+                }
+            } else if window_id == clock.window.id() {
+                clock.handle_event(&event, &mut stats);
+            } else if window_id == todo.window.id() {
+                todo.handle_event(&event);
+            } else if window_id == dock.window.id() {
+                if let Some("launcher") = dock.handle_event(&event) {
+                    launcher.toggle();
+                }
             }
-            _ => {}
         }
+        Event::AboutToWait => {
+            let now = Instant::now();
+            let dt = (now - last_frame).as_secs_f32().clamp(0.001, 0.05);
+            last_frame = now;
+
+            stats.poll(island.power_save);
+
+            if last_overlap_check.elapsed() >= Duration::from_secs(2) {
+                last_overlap_check = now;
+                let ov_i = win_os::is_foreground_overlapping(island.pos_x, island.pos_y, island.width as i32, island.height as i32);
+                if ov_i != island.is_window_overlapping {
+                    island.is_window_overlapping = ov_i;
+                    island.needs_redraw = true;
+                }
+                let ov_c = win_os::is_foreground_overlapping(clock.pos_x, clock.pos_y, clock.width as i32, clock.height as i32);
+                if ov_c != clock.is_window_overlapping {
+                    clock.is_window_overlapping = ov_c;
+                    clock.needs_redraw = true;
+                }
+            }
+
+            let a_i = island.update_physics(dt);
+            let a_c = clock.update_physics(dt);
+            let a_t = todo.update_physics(dt);
+            let a_l = launcher.update_physics(dt);
+
+            if a_i || island.needs_redraw {
+                island.draw(&stats);
+                island.needs_redraw = false;
+            }
+            if a_c || clock.needs_redraw {
+                clock.draw(&stats);
+                clock.needs_redraw = false;
+            }
+            if a_t || todo.needs_redraw {
+                todo.draw();
+                todo.needs_redraw = false;
+            }
+            if dock.needs_redraw {
+                dock.draw();
+                dock.needs_redraw = false;
+            }
+            if a_l || launcher.needs_redraw {
+                launcher.draw();
+                launcher.needs_redraw = false;
+            }
+
+            let animating = a_i || a_c || a_t || a_l;
+            if animating {
+                elwt.set_control_flow(ControlFlow::WaitUntil(now + Duration::from_millis(16)));
+            } else {
+                let idle_ms = if island.power_save { 3000 } else { 1000 };
+                elwt.set_control_flow(ControlFlow::WaitUntil(now + Duration::from_millis(idle_ms)));
+            }
+        }
+        _ => {}
     });
 }
