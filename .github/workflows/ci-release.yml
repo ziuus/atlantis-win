@@ -1,0 +1,25 @@
+name: Windows CI & Release
+
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  pull_request:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo build --release
+      - name: Stage release exe
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: copy target\release\atlantis-win.exe atlantis-win-x86_64.exe
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          files: atlantis-win-x86_64.exe
