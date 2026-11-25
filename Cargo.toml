@@ -1,0 +1,17 @@
+[package]
+name = "atlantis-win"
+version = "0.1.0"
+edition = "2021"
+description = "🔱 Atlantis for Windows — Physical Optical Liquid Glass Dynamic Island & Desktop Shell"
+repository = "https://github.com/ziuus/atlantis-win"
+license = "MIT"
+
+[dependencies]
+glass-core = { git = "https://github.com/ziuus/liquid-glass.git" }
+glass-platform = { git = "https://github.com/ziuus/liquid-glass.git" }
+winit = "0.29"
+pollster = "0.3"
+chrono = "0.4"
+sysinfo = "0.30"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
