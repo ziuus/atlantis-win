@@ -484,7 +484,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e35d6e78f4cebb90e51d543db8fe41528851d6deeef6ef21ebd4bfdc1e784776"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -601,7 +601,7 @@ dependencies = [
 [[package]]
 name = "glass-core"
 version = "0.1.0"
-source = "git+https://github.com/ziuus/liquid-glass.git#70326b9ce874edaea02139d2de277822d3484e9e"
+source = "git+https://github.com/ziuus/liquid-glass.git#9e96037610b5d6ea764f9d86bf6ea63efc90e7b3"
 dependencies = [
  "ab_glyph",
  "bytemuck",
@@ -616,7 +616,7 @@ dependencies = [
 [[package]]
 name = "glass-platform"
 version = "0.1.0"
-source = "git+https://github.com/ziuus/liquid-glass.git#70326b9ce874edaea02139d2de277822d3484e9e"
+source = "git+https://github.com/ziuus/liquid-glass.git#9e96037610b5d6ea764f9d86bf6ea63efc90e7b3"
 dependencies = [
  "image",
  "libc",
@@ -1420,7 +1420,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2100,7 +2100,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
