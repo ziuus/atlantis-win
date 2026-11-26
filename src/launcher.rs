@@ -45,6 +45,8 @@ pub struct LauncherWindow {
     pub is_window_overlapping: bool,
     pub style_mode: f32,
     pub theme_mode: u32,
+    pub pure_bw: bool,
+    pub accent_color: [u8; 3],
     pub blur_radius: f32,
     pub is_wallpaper_light: bool,
     pub cursor_pos: [f32; 2],
@@ -113,6 +115,8 @@ impl LauncherWindow {
             is_window_overlapping: false,
             style_mode: 2.0,
             theme_mode: 0,
+            pure_bw: true,
+            accent_color: [0, 0, 0],
             blur_radius: 0.0,
             is_wallpaper_light: is_light,
             cursor_pos: [-1.0, -1.0],
@@ -584,16 +588,32 @@ impl LauncherWindow {
         let is_light = self.effective_is_light();
         let buf = &mut self.overlay;
         let a = (255.0 * t) as u8;
-        let col_ink = if is_light { [10, 14, 24, a] } else { [245, 247, 252, a] };
-        let col_dim = if is_light {
-            [42, 56, 76, (175.0 * t) as u8]
+        let col_ink = if is_light {
+            if self.pure_bw { [0, 0, 0, a] } else { [10, 14, 24, a] }
         } else {
-            [205, 218, 238, (175.0 * t) as u8]
+            if self.pure_bw { [255, 255, 255, a] } else { [245, 247, 252, a] }
         };
-        let col_acc = if is_light {
-            [18, 108, 224, (220.0 * t) as u8]
+        let col_dim = if is_light {
+            if self.pure_bw { [0, 0, 0, (175.0 * t) as u8] } else { [42, 56, 76, (175.0 * t) as u8] }
         } else {
-            [115, 190, 255, (230.0 * t) as u8]
+            if self.pure_bw { [255, 255, 255, (175.0 * t) as u8] } else { [205, 218, 238, (175.0 * t) as u8] }
+        };
+        let ac = self.accent_color;
+        let col_acc = if self.pure_bw {
+            if is_light {
+                [0, 0, 0, (220.0 * t) as u8]
+            } else if ac == [0, 0, 0] {
+                [255, 255, 255, (230.0 * t) as u8]
+            } else {
+                [ac[0], ac[1], ac[2], (230.0 * t) as u8]
+            }
+        } else if is_light {
+            [ac[0], ac[1], ac[2], (220.0 * t) as u8]
+        } else {
+            let lr = (ac[0] as u16 + 97).min(255) as u8;
+            let lg = (ac[1] as u16 + 82).min(255) as u8;
+            let lb = (ac[2] as u16 + 31).min(255) as u8;
+            [lr, lg, lb, (230.0 * t) as u8]
         };
         let pill_bg = if is_light {
             [0, 0, 0, (16.0 * t) as u8]

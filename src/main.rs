@@ -24,6 +24,28 @@ use launcher::LauncherWindow;
 use telemetry::SysStats;
 use todo::TodoWindow;
 
+fn parse_color(val: &serde_json::Value) -> Option<[u8; 3]> {
+    if let Some(arr) = val.as_array() {
+        if arr.len() >= 3 {
+            return Some([
+                arr[0].as_u64()? as u8,
+                arr[1].as_u64()? as u8,
+                arr[2].as_u64()? as u8,
+            ]);
+        }
+    }
+    if let Some(s) = val.as_str() {
+        let s = s.trim_start_matches('#');
+        if s.len() == 6 {
+            let r = u8::from_str_radix(&s[0..2], 16).ok()?;
+            let g = u8::from_str_radix(&s[2..4], 16).ok()?;
+            let b = u8::from_str_radix(&s[4..6], 16).ok()?;
+            return Some([r, g, b]);
+        }
+    }
+    None
+}
+
 fn main() {
     UIFont::set_global_scale(1.12);
     let event_loop = EventLoop::new().expect("create winit event loop");
@@ -60,6 +82,64 @@ fn main() {
         wp_buf.as_deref(),
         is_light,
     );
+
+    let cfg_path = win_os::data_dir().join("config.json");
+    if let Ok(content) = std::fs::read_to_string(&cfg_path) {
+        if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
+            if let Some(tm) = val.get("theme_mode").and_then(|v| v.as_u64()) {
+                let t = tm as u32;
+                island.theme_mode = t;
+                clock.theme_mode = t;
+                todo.theme_mode = t;
+                dock.theme_mode = t;
+                launcher.theme_mode = t;
+            }
+            if let Some(sm) = val.get("style_mode").and_then(|v| v.as_f64()) {
+                let s = sm as f32;
+                island.style_mode = s;
+                clock.style_mode = s;
+                todo.style_mode = s;
+                dock.style_mode = s;
+                launcher.style_mode = s;
+            }
+            if let Some(ct) = val.get("color_theme").and_then(|v| v.as_str()) {
+                let (bw, ac) = match ct.to_lowercase().as_str() {
+                    "bw" | "black_white" | "monochrome" | "default" => (true, [0, 0, 0]),
+                    "slate" | "glass" => (false, [18, 108, 224]),
+                    "ocean" | "blue" => (false, [30, 144, 255]),
+                    "purple" | "violet" => (false, [140, 108, 255]),
+                    "emerald" | "green" => (false, [34, 197, 94]),
+                    "crimson" | "red" => (false, [239, 68, 68]),
+                    "amber" | "gold" => (false, [245, 158, 11]),
+                    _ => (true, [0, 0, 0]),
+                };
+                island.pure_bw = bw;
+                clock.pure_bw = bw;
+                todo.pure_bw = bw;
+                dock.pure_bw = bw;
+                launcher.pure_bw = bw;
+                island.accent_color = ac;
+                clock.accent_color = ac;
+                todo.accent_color = ac;
+                dock.accent_color = ac;
+                launcher.accent_color = ac;
+            }
+            if let Some(ac) = val.get("accent_color").and_then(parse_color) {
+                island.accent_color = ac;
+                clock.accent_color = ac;
+                todo.accent_color = ac;
+                dock.accent_color = ac;
+                launcher.accent_color = ac;
+            }
+            if let Some(bw) = val.get("pure_bw").and_then(|v| v.as_bool()) {
+                island.pure_bw = bw;
+                clock.pure_bw = bw;
+                todo.pure_bw = bw;
+                dock.pure_bw = bw;
+                launcher.pure_bw = bw;
+            }
+        }
+    }
 
     let mut last_frame = Instant::now();
     let mut last_overlap_check = Instant::now() - Duration::from_secs(10);

@@ -38,6 +38,8 @@ pub struct TodoWindow {
     pub is_window_overlapping: bool,
     pub style_mode: f32,
     pub theme_mode: u32,
+    pub pure_bw: bool,
+    pub accent_color: [u8; 3],
     pub blur_radius: f32,
     pub is_wallpaper_light: bool,
     pub cursor_pos: [f32; 2],
@@ -96,6 +98,8 @@ impl TodoWindow {
             is_window_overlapping: false,
             style_mode: 2.0,
             theme_mode: 0,
+            pure_bw: true,
+            accent_color: [0, 0, 0],
             blur_radius: 0.0,
             is_wallpaper_light: is_light,
             cursor_pos: [-1.0, -1.0],
@@ -243,8 +247,16 @@ impl TodoWindow {
         let eff_style = self.effective_style_mode();
         let sw = self.width as f32;
         let sh = self.height as f32;
-        let col_p = if is_light { [10, 14, 22, 255] } else { [248, 250, 255, 255] };
-        let col_dim = if is_light { [50, 65, 85, 210] } else { [205, 218, 238, 210] };
+        let col_p = if is_light {
+            if self.pure_bw { [0, 0, 0, 255] } else { [10, 14, 22, 255] }
+        } else {
+            if self.pure_bw { [255, 255, 255, 255] } else { [248, 250, 255, 255] }
+        };
+        let col_dim = if is_light {
+            if self.pure_bw { [0, 0, 0, 220] } else { [50, 65, 85, 210] }
+        } else {
+            if self.pure_bw { [255, 255, 255, 220] } else { [205, 218, 238, 210] }
+        };
         let no_shadow = [0, 0, 0, 0];
 
         if t <= 0.05 {

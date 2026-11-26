@@ -55,6 +55,8 @@ pub struct IslandWindow {
     pub is_window_overlapping: bool,
     pub style_mode: f32,
     pub theme_mode: u32,
+    pub pure_bw: bool,
+    pub accent_color: [u8; 3],
     pub blur_radius: f32,
     pub is_wallpaper_light: bool,
     pub cursor_pos: [f32; 2],
@@ -115,6 +117,8 @@ impl IslandWindow {
             is_window_overlapping: false,
             style_mode: 2.0,
             theme_mode: 0,
+            pure_bw: true,
+            accent_color: [0, 0, 0],
             blur_radius: 0.0,
             is_wallpaper_light: is_light,
             cursor_pos: [-1.0, -1.0],
@@ -287,8 +291,16 @@ impl IslandWindow {
         let sw = self.width as f32;
         let sh = self.height as f32;
         let cx = sw * 0.5;
-        let col_ink = if is_light { [10, 14, 24, 255] } else { [248, 250, 255, 255] };
-        let col_dim = if is_light { [50, 65, 85, 200] } else { [205, 218, 238, 200] };
+        let col_ink = if is_light {
+            if self.pure_bw { [0, 0, 0, 255] } else { [10, 14, 24, 255] }
+        } else {
+            if self.pure_bw { [255, 255, 255, 255] } else { [248, 250, 255, 255] }
+        };
+        let col_dim = if is_light {
+            if self.pure_bw { [0, 0, 0, 220] } else { [50, 65, 85, 200] }
+        } else {
+            if self.pure_bw { [255, 255, 255, 220] } else { [205, 218, 238, 200] }
+        };
         let no_shadow = [0, 0, 0, 0];
 
         let cur_w = COMPACT_W + (EXPANDED_W - COMPACT_W) * t;

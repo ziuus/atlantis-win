@@ -72,6 +72,8 @@ pub struct ClockWindow {
     pub is_window_overlapping: bool,
     pub style_mode: f32,
     pub theme_mode: u32,
+    pub pure_bw: bool,
+    pub accent_color: [u8; 3],
     pub blur_radius: f32,
     pub is_wallpaper_light: bool,
     pub cursor_pos: [f32; 2],
@@ -135,6 +137,8 @@ impl ClockWindow {
             is_window_overlapping: false,
             style_mode: 2.0,
             theme_mode: 0,
+            pure_bw: true,
+            accent_color: [0, 0, 0],
             blur_radius: 0.0,
             is_wallpaper_light: is_light,
             cursor_pos: [-1.0, -1.0],
@@ -434,7 +438,11 @@ impl ClockWindow {
         if t <= 0.05 {
             let now = Local::now();
             let txt = format!("{}  |  {}%", now.format("%H:%M"), stats.cpu_pct);
-            let col = if is_light { [12, 16, 24, 255] } else { [245, 248, 255, 255] };
+            let col = if is_light {
+                if self.pure_bw { [0, 0, 0, 255] } else { [12, 16, 24, 255] }
+            } else {
+                if self.pure_bw { [255, 255, 255, 255] } else { [245, 248, 255, 255] }
+            };
             self.font.draw_text_centered(
                 &mut self.overlay,
                 self.width,
@@ -462,8 +470,16 @@ impl ClockWindow {
 
         let vis = self.visible_boxes();
         let m = if self.customizing { 1.0 } else { self.more_spring.value.clamp(0.0, 1.0) };
-        let col_p = if is_light { [10, 14, 22, 255] } else { [255, 255, 255, 255] };
-        let col_sub = if is_light { [50, 65, 85, 220] } else { [210, 224, 244, 220] };
+        let col_p = if is_light {
+            if self.pure_bw { [0, 0, 0, 255] } else { [10, 14, 22, 255] }
+        } else {
+            [255, 255, 255, 255]
+        };
+        let col_sub = if is_light {
+            if self.pure_bw { [0, 0, 0, 220] } else { [50, 65, 85, 220] }
+        } else {
+            if self.pure_bw { [255, 255, 255, 220] } else { [210, 224, 244, 220] }
+        };
         let now = Local::now();
 
         let mut surfaces = Vec::new();
