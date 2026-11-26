@@ -248,26 +248,59 @@ impl TodoWindow {
         let sw = self.width as f32;
         let sh = self.height as f32;
         let col_p = if is_light {
-            if self.pure_bw { [0, 0, 0, 255] } else { [10, 14, 22, 255] }
+            if self.pure_bw {
+                [0, 0, 0, 255]
+            } else {
+                [10, 14, 22, 255]
+            }
         } else {
-            if self.pure_bw { [255, 255, 255, 255] } else { [248, 250, 255, 255] }
+            if self.pure_bw {
+                [255, 255, 255, 255]
+            } else {
+                [248, 250, 255, 255]
+            }
         };
         let col_dim = if is_light {
-            if self.pure_bw { [0, 0, 0, 220] } else { [50, 65, 85, 210] }
+            if self.pure_bw {
+                [0, 0, 0, 220]
+            } else {
+                [50, 65, 85, 210]
+            }
         } else {
-            if self.pure_bw { [255, 255, 255, 220] } else { [205, 218, 238, 210] }
+            if self.pure_bw {
+                [255, 255, 255, 220]
+            } else {
+                [205, 218, 238, 210]
+            }
         };
         let no_shadow = [0, 0, 0, 0];
 
         if t <= 0.05 {
             let pending = self.tasks.iter().filter(|x| !x.done).count();
             let txt = format!("Tasks  ·  {}", pending);
-            self.font.draw_text_centered(&mut self.overlay, self.width, self.height, &txt, sw - COMPACT_W * 0.5 - 8.0, 16.0, 12.0, col_p, no_shadow, FontWeight::SemiBold);
-            self.renderer.update_overlay(self.width, self.height, &self.overlay);
+            self.font.draw_text_centered(
+                &mut self.overlay,
+                self.width,
+                self.height,
+                &txt,
+                sw - COMPACT_W * 0.5 - 8.0,
+                16.0,
+                12.0,
+                col_p,
+                no_shadow,
+                FontWeight::SemiBold,
+            );
+            self.renderer
+                .update_overlay(self.width, self.height, &self.overlay);
             let pill = GlassSurface::new()
                 .material(Material::LiquidGlass)
                 .shape(Shape::Capsule)
-                .bounds((sw - COMPACT_W - 8.0) / sw, 0.0, COMPACT_W / sw, COMPACT_H / sh)
+                .bounds(
+                    (sw - COMPACT_W - 8.0) / sw,
+                    0.0,
+                    COMPACT_W / sw,
+                    COMPACT_H / sh,
+                )
                 .style_mode(eff_style)
                 .tint(0.0, 0.0, 1.0, if is_light { 1.0 } else { 0.0 })
                 .element_type(27.0);
@@ -275,18 +308,56 @@ impl TodoWindow {
             return;
         }
 
-        self.font.draw_text(&mut self.overlay, self.width, self.height, "TASKS", 28.0, 32.0, 11.0, col_dim, FontWeight::Bold);
+        self.font.draw_text(
+            &mut self.overlay,
+            self.width,
+            self.height,
+            "TASKS",
+            28.0,
+            32.0,
+            11.0,
+            col_dim,
+            FontWeight::Bold,
+        );
         for (i, item) in self.tasks.iter().take(6).enumerate() {
             let ry = 74.0 + i as f32 * 38.0;
             let mark = if item.done { "✓" } else { "○" };
-            self.font.draw_text_centered_y(&mut self.overlay, self.width, self.height, mark, 28.0, ry, 13.0, col_p, no_shadow, FontWeight::Bold);
-            self.font.draw_text_centered_y(&mut self.overlay, self.width, self.height, &item.text, 50.0, ry, 12.5, if item.done { col_dim } else { col_p }, no_shadow, FontWeight::Medium);
+            self.font.draw_text_centered_y(
+                &mut self.overlay,
+                self.width,
+                self.height,
+                mark,
+                28.0,
+                ry,
+                13.0,
+                col_p,
+                no_shadow,
+                FontWeight::Bold,
+            );
+            self.font.draw_text_centered_y(
+                &mut self.overlay,
+                self.width,
+                self.height,
+                &item.text,
+                50.0,
+                ry,
+                12.5,
+                if item.done { col_dim } else { col_p },
+                no_shadow,
+                FontWeight::Medium,
+            );
         }
-        self.renderer.update_overlay(self.width, self.height, &self.overlay);
+        self.renderer
+            .update_overlay(self.width, self.height, &self.overlay);
         let card = GlassSurface::new()
             .material(Material::LiquidGlass)
             .shape(Shape::RoundedRectangle { radius: 22.0 })
-            .bounds(8.0 / sw, 0.0, (sw - 16.0) / sw, ((64.0 + (sh - 64.0) * t) / sh).min(1.0))
+            .bounds(
+                8.0 / sw,
+                0.0,
+                (sw - 16.0) / sw,
+                ((64.0 + (sh - 64.0) * t) / sh).min(1.0),
+            )
             .blur(self.blur_radius)
             .style_mode(eff_style)
             .tint(0.0, 0.0, 1.0, if is_light { 1.0 } else { 0.0 })

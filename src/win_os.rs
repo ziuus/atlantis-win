@@ -86,7 +86,9 @@ fn collect_lnk_recursive(dir: &std::path::Path, out: &mut Vec<WinApp>) {
 pub fn launch_app(target: &str) {
     #[cfg(windows)]
     {
-        let _ = Command::new("cmd").args(["/C", "start", "", target]).spawn();
+        let _ = Command::new("cmd")
+            .args(["/C", "start", "", target])
+            .spawn();
     }
     #[cfg(not(windows))]
     {

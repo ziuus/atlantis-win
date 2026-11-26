@@ -589,14 +589,30 @@ impl LauncherWindow {
         let buf = &mut self.overlay;
         let a = (255.0 * t) as u8;
         let col_ink = if is_light {
-            if self.pure_bw { [0, 0, 0, a] } else { [10, 14, 24, a] }
+            if self.pure_bw {
+                [0, 0, 0, a]
+            } else {
+                [10, 14, 24, a]
+            }
         } else {
-            if self.pure_bw { [255, 255, 255, a] } else { [245, 247, 252, a] }
+            if self.pure_bw {
+                [255, 255, 255, a]
+            } else {
+                [245, 247, 252, a]
+            }
         };
         let col_dim = if is_light {
-            if self.pure_bw { [0, 0, 0, (175.0 * t) as u8] } else { [42, 56, 76, (175.0 * t) as u8] }
+            if self.pure_bw {
+                [0, 0, 0, (175.0 * t) as u8]
+            } else {
+                [42, 56, 76, (175.0 * t) as u8]
+            }
         } else {
-            if self.pure_bw { [255, 255, 255, (175.0 * t) as u8] } else { [205, 218, 238, (175.0 * t) as u8] }
+            if self.pure_bw {
+                [255, 255, 255, (175.0 * t) as u8]
+            } else {
+                [205, 218, 238, (175.0 * t) as u8]
+            }
         };
         let ac = self.accent_color;
         let col_acc = if self.pure_bw {
@@ -623,8 +639,27 @@ impl LauncherWindow {
         let no_shadow = [0, 0, 0, 0];
 
         let scy = SEARCH_CARD_H * 0.5;
-        UIFont::draw_rounded_rect_stroke(buf, self.width, self.height, 28.5, scy - 1.5, 5.5, 5.5, 5.5, 1.5, col_acc);
-        UIFont::draw_segment(buf, self.width, self.height, (32.8, scy + 2.8), (37.2, scy + 7.2), 1.6, col_acc);
+        UIFont::draw_rounded_rect_stroke(
+            buf,
+            self.width,
+            self.height,
+            28.5,
+            scy - 1.5,
+            5.5,
+            5.5,
+            5.5,
+            1.5,
+            col_acc,
+        );
+        UIFont::draw_segment(
+            buf,
+            self.width,
+            self.height,
+            (32.8, scy + 2.8),
+            (37.2, scy + 7.2),
+            1.6,
+            col_acc,
+        );
 
         let disp_q = if self.query.is_empty() {
             "Search apps, > commands, or math..."
@@ -639,14 +674,39 @@ impl LauncherWindow {
             52.0,
             scy,
             16.5,
-            if self.query.is_empty() { col_dim } else { col_ink },
+            if self.query.is_empty() {
+                col_dim
+            } else {
+                col_ink
+            },
             no_shadow,
             FontWeight::Medium,
         );
 
         let badge = format!("Apps · {}", self.filtered.len());
-        UIFont::draw_rounded_rect_fill(buf, self.width, self.height, self.width as f32 - 58.0, scy, 38.0, 12.0, 10.0, pill_bg);
-        self.font.draw_text_centered(buf, self.width, self.height, &badge, self.width as f32 - 58.0, scy, 11.0, col_dim, no_shadow, FontWeight::SemiBold);
+        UIFont::draw_rounded_rect_fill(
+            buf,
+            self.width,
+            self.height,
+            self.width as f32 - 58.0,
+            scy,
+            38.0,
+            12.0,
+            10.0,
+            pill_bg,
+        );
+        self.font.draw_text_centered(
+            buf,
+            self.width,
+            self.height,
+            &badge,
+            self.width as f32 - 58.0,
+            scy,
+            11.0,
+            col_dim,
+            no_shadow,
+            FontWeight::SemiBold,
+        );
 
         let row_w = DIVIDER_X - 30.0;
         let row_cx = 14.0 + row_w * 0.5;
@@ -658,37 +718,196 @@ impl LauncherWindow {
             let ry = LIST_TOP_Y + ROW_H * 0.5 + (slot as f32) * ROW_H;
             let is_sel = idx == self.selected_idx;
             if is_sel {
-                UIFont::draw_rounded_rect_fill(buf, self.width, self.height, row_cx, ry, row_w * 0.5, 24.0, 12.0, pill_bg);
-                UIFont::draw_rounded_rect_fill(buf, self.width, self.height, 18.0, ry, 1.5, 12.0, 1.5, col_acc);
+                UIFont::draw_rounded_rect_fill(
+                    buf,
+                    self.width,
+                    self.height,
+                    row_cx,
+                    ry,
+                    row_w * 0.5,
+                    24.0,
+                    12.0,
+                    pill_bg,
+                );
+                UIFont::draw_rounded_rect_fill(
+                    buf,
+                    self.width,
+                    self.height,
+                    18.0,
+                    ry,
+                    1.5,
+                    12.0,
+                    1.5,
+                    col_acc,
+                );
             }
-            UIFont::draw_rounded_rect_fill(buf, self.width, self.height, 40.0, ry, 16.0, 16.0, 9.0, pill_bg);
+            UIFont::draw_rounded_rect_fill(
+                buf,
+                self.width,
+                self.height,
+                40.0,
+                ry,
+                16.0,
+                16.0,
+                9.0,
+                pill_bg,
+            );
             let (title, sub, glyph) = match item {
-                SearchResult::Calc { expr, value } => (format!("= {}", value), format!("{} · Enter to copy", expr), "="),
-                SearchResult::App(a) => (a.name.clone(), a.comment.clone(), if a.is_action { ">" } else { "•" }),
+                SearchResult::Calc { expr, value } => (
+                    format!("= {}", value),
+                    format!("{} · Enter to copy", expr),
+                    "=",
+                ),
+                SearchResult::App(a) => (
+                    a.name.clone(),
+                    a.comment.clone(),
+                    if a.is_action { ">" } else { "•" },
+                ),
             };
-            self.font.draw_text_centered(buf, self.width, self.height, glyph, 40.0, ry, 14.0, col_acc, no_shadow, FontWeight::Bold);
+            self.font.draw_text_centered(
+                buf,
+                self.width,
+                self.height,
+                glyph,
+                40.0,
+                ry,
+                14.0,
+                col_acc,
+                no_shadow,
+                FontWeight::Bold,
+            );
             let t_tr: String = title.chars().take(24).collect();
             let s_tr: String = sub.chars().take(34).collect();
-            self.font.draw_text_centered_y(buf, self.width, self.height, &t_tr, 66.0, ry - 7.5, 13.5, col_ink, no_shadow, FontWeight::SemiBold);
-            self.font.draw_text_centered_y(buf, self.width, self.height, &s_tr, 66.0, ry + 9.0, 10.5, col_dim, no_shadow, FontWeight::Medium);
+            self.font.draw_text_centered_y(
+                buf,
+                self.width,
+                self.height,
+                &t_tr,
+                66.0,
+                ry - 7.5,
+                13.5,
+                col_ink,
+                no_shadow,
+                FontWeight::SemiBold,
+            );
+            self.font.draw_text_centered_y(
+                buf,
+                self.width,
+                self.height,
+                &s_tr,
+                66.0,
+                ry + 9.0,
+                10.5,
+                col_dim,
+                no_shadow,
+                FontWeight::Medium,
+            );
         }
 
         // Right Inspector
         let insp_cx = (DIVIDER_X + self.width as f32) * 0.5;
         if let Some(sel) = self.filtered.get(self.selected_idx) {
-            UIFont::draw_rounded_rect_fill(buf, self.width, self.height, insp_cx, 158.0, 34.0, 34.0, 16.0, pill_bg);
+            UIFont::draw_rounded_rect_fill(
+                buf,
+                self.width,
+                self.height,
+                insp_cx,
+                158.0,
+                34.0,
+                34.0,
+                16.0,
+                pill_bg,
+            );
             let (title, kind, desc) = match sel {
                 SearchResult::Calc { expr, value } => (value.as_str(), "Calculator", expr.as_str()),
-                SearchResult::App(a) => (a.name.as_str(), if a.is_action { "System Action" } else { "Application" }, a.comment.as_str()),
+                SearchResult::App(a) => (
+                    a.name.as_str(),
+                    if a.is_action {
+                        "System Action"
+                    } else {
+                        "Application"
+                    },
+                    a.comment.as_str(),
+                ),
             };
-            let ch = title.chars().next().unwrap_or('•').to_uppercase().to_string();
-            self.font.draw_text_centered(buf, self.width, self.height, &ch, insp_cx, 158.0, 24.0, col_acc, no_shadow, FontWeight::Bold);
-            self.font.draw_text_centered(buf, self.width, self.height, &title.chars().take(20).collect::<String>(), insp_cx, 214.0, 15.5, col_ink, no_shadow, FontWeight::Bold);
-            self.font.draw_text_centered(buf, self.width, self.height, kind, insp_cx, 240.0, 11.0, col_acc, no_shadow, FontWeight::SemiBold);
-            self.font.draw_text_centered(buf, self.width, self.height, &desc.chars().take(28).collect::<String>(), insp_cx, 276.0, 11.5, col_dim, no_shadow, FontWeight::Medium);
+            let ch = title
+                .chars()
+                .next()
+                .unwrap_or('•')
+                .to_uppercase()
+                .to_string();
+            self.font.draw_text_centered(
+                buf,
+                self.width,
+                self.height,
+                &ch,
+                insp_cx,
+                158.0,
+                24.0,
+                col_acc,
+                no_shadow,
+                FontWeight::Bold,
+            );
+            self.font.draw_text_centered(
+                buf,
+                self.width,
+                self.height,
+                &title.chars().take(20).collect::<String>(),
+                insp_cx,
+                214.0,
+                15.5,
+                col_ink,
+                no_shadow,
+                FontWeight::Bold,
+            );
+            self.font.draw_text_centered(
+                buf,
+                self.width,
+                self.height,
+                kind,
+                insp_cx,
+                240.0,
+                11.0,
+                col_acc,
+                no_shadow,
+                FontWeight::SemiBold,
+            );
+            self.font.draw_text_centered(
+                buf,
+                self.width,
+                self.height,
+                &desc.chars().take(28).collect::<String>(),
+                insp_cx,
+                276.0,
+                11.5,
+                col_dim,
+                no_shadow,
+                FontWeight::Medium,
+            );
 
-            UIFont::draw_rounded_rect_fill(buf, self.width, self.height, insp_cx, 414.0, 96.0, 16.0, 11.0, pill_bg);
-            self.font.draw_text_centered(buf, self.width, self.height, "Launch · Enter", insp_cx, 414.0, 11.5, col_ink, no_shadow, FontWeight::SemiBold);
+            UIFont::draw_rounded_rect_fill(
+                buf,
+                self.width,
+                self.height,
+                insp_cx,
+                414.0,
+                96.0,
+                16.0,
+                11.0,
+                pill_bg,
+            );
+            self.font.draw_text_centered(
+                buf,
+                self.width,
+                self.height,
+                "Launch · Enter",
+                insp_cx,
+                414.0,
+                11.5,
+                col_ink,
+                no_shadow,
+                FontWeight::SemiBold,
+            );
         }
 
         self.font.draw_text_centered(
@@ -721,7 +940,11 @@ fn eval_expr_add_sub(s: &str) -> Option<f64> {
     terms.push(eval_expr_mul_div(&s[start..])?);
     let mut acc = terms[0];
     for (idx, &op) in ops.iter().enumerate() {
-        if op == b'+' { acc += terms[idx + 1]; } else { acc -= terms[idx + 1]; }
+        if op == b'+' {
+            acc += terms[idx + 1];
+        } else {
+            acc -= terms[idx + 1];
+        }
     }
     Some(acc)
 }
@@ -741,8 +964,12 @@ fn eval_expr_mul_div(s: &str) -> Option<f64> {
     factors.push(s[start..].parse::<f64>().ok()?);
     let mut acc = factors[0];
     for (idx, &op) in ops.iter().enumerate() {
-        if op == b'*' { acc *= factors[idx + 1]; } else {
-            if factors[idx + 1].abs() < 1e-12 { return None; }
+        if op == b'*' {
+            acc *= factors[idx + 1];
+        } else {
+            if factors[idx + 1].abs() < 1e-12 {
+                return None;
+            }
             acc /= factors[idx + 1];
         }
     }

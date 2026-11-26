@@ -292,14 +292,30 @@ impl IslandWindow {
         let sh = self.height as f32;
         let cx = sw * 0.5;
         let col_ink = if is_light {
-            if self.pure_bw { [0, 0, 0, 255] } else { [10, 14, 24, 255] }
+            if self.pure_bw {
+                [0, 0, 0, 255]
+            } else {
+                [10, 14, 24, 255]
+            }
         } else {
-            if self.pure_bw { [255, 255, 255, 255] } else { [248, 250, 255, 255] }
+            if self.pure_bw {
+                [255, 255, 255, 255]
+            } else {
+                [248, 250, 255, 255]
+            }
         };
         let col_dim = if is_light {
-            if self.pure_bw { [0, 0, 0, 220] } else { [50, 65, 85, 200] }
+            if self.pure_bw {
+                [0, 0, 0, 220]
+            } else {
+                [50, 65, 85, 200]
+            }
         } else {
-            if self.pure_bw { [255, 255, 255, 220] } else { [205, 218, 238, 200] }
+            if self.pure_bw {
+                [255, 255, 255, 220]
+            } else {
+                [205, 218, 238, 200]
+            }
         };
         let no_shadow = [0, 0, 0, 0];
 
@@ -308,7 +324,18 @@ impl IslandWindow {
 
         if t <= 0.08 {
             let txt = format!("Atlantis  ·  {}", Local::now().format("%H:%M"));
-            self.font.draw_text_centered(&mut self.overlay, self.width, self.height, &txt, cx, cur_h * 0.5, 12.0, col_ink, no_shadow, FontWeight::SemiBold);
+            self.font.draw_text_centered(
+                &mut self.overlay,
+                self.width,
+                self.height,
+                &txt,
+                cx,
+                cur_h * 0.5,
+                12.0,
+                col_ink,
+                no_shadow,
+                FontWeight::SemiBold,
+            );
         } else {
             let hdr = match self.page {
                 IslandPage::Notifications => "NOTIFICATIONS",
@@ -316,41 +343,153 @@ impl IslandWindow {
                 IslandPage::SystemOverview => "SYSTEM OVERVIEW",
                 IslandPage::Compact => "ATLANTIS",
             };
-            self.font.draw_text(&mut self.overlay, self.width, self.height, hdr, cx - cur_w * 0.5 + 24.0, 32.0, 10.5, col_dim, FontWeight::Bold);
+            self.font.draw_text(
+                &mut self.overlay,
+                self.width,
+                self.height,
+                hdr,
+                cx - cur_w * 0.5 + 24.0,
+                32.0,
+                10.5,
+                col_dim,
+                FontWeight::Bold,
+            );
 
             match self.page {
                 IslandPage::Notifications => {
-                    self.font.draw_text_centered(&mut self.overlay, self.width, self.height, "No unread notifications", cx, 84.0, 13.0, col_dim, no_shadow, FontWeight::Medium);
+                    self.font.draw_text_centered(
+                        &mut self.overlay,
+                        self.width,
+                        self.height,
+                        "No unread notifications",
+                        cx,
+                        84.0,
+                        13.0,
+                        col_dim,
+                        no_shadow,
+                        FontWeight::Medium,
+                    );
                 }
                 IslandPage::ControlCenter => {
                     let eco = if self.power_save { "Eco" } else { "Full" };
-                    let ab = if self.app_backdrop_solid { "App BG: Solid" } else { "App BG: Glass" };
-                    self.font.draw_text_centered(&mut self.overlay, self.width, self.height, eco, cx + 76.0, 28.0, 10.0, col_ink, no_shadow, FontWeight::SemiBold);
-                    self.font.draw_text_centered(&mut self.overlay, self.width, self.height, ab, cx + 150.0, 28.0, 10.0, col_ink, no_shadow, FontWeight::SemiBold);
+                    let ab = if self.app_backdrop_solid {
+                        "App BG: Solid"
+                    } else {
+                        "App BG: Glass"
+                    };
+                    self.font.draw_text_centered(
+                        &mut self.overlay,
+                        self.width,
+                        self.height,
+                        eco,
+                        cx + 76.0,
+                        28.0,
+                        10.0,
+                        col_ink,
+                        no_shadow,
+                        FontWeight::SemiBold,
+                    );
+                    self.font.draw_text_centered(
+                        &mut self.overlay,
+                        self.width,
+                        self.height,
+                        ab,
+                        cx + 150.0,
+                        28.0,
+                        10.0,
+                        col_ink,
+                        no_shadow,
+                        FontWeight::SemiBold,
+                    );
 
-                    let th = match self.theme_mode { 1 => "Theme: Dark", 2 => "Theme: Light", _ => "Theme: Auto" };
-                    let vol = if stats.vol_muted { "Muted" } else { "Sound: On" };
+                    let th = match self.theme_mode {
+                        1 => "Theme: Dark",
+                        2 => "Theme: Light",
+                        _ => "Theme: Auto",
+                    };
+                    let vol = if stats.vol_muted {
+                        "Muted"
+                    } else {
+                        "Sound: On"
+                    };
                     for (bx, lbl) in [(cx - 120.0, th), (cx, vol), (cx + 120.0, "Launcher")] {
-                        let bg = if is_light { [0, 0, 0, 16] } else { [255, 255, 255, 24] };
-                        UIFont::draw_rounded_rect_fill(&mut self.overlay, self.width, self.height, bx, 72.0, 52.0, 16.0, 11.0, bg);
-                        self.font.draw_text_centered(&mut self.overlay, self.width, self.height, lbl, bx, 72.0, 11.5, col_ink, no_shadow, FontWeight::SemiBold);
+                        let bg = if is_light {
+                            [0, 0, 0, 16]
+                        } else {
+                            [255, 255, 255, 24]
+                        };
+                        UIFont::draw_rounded_rect_fill(
+                            &mut self.overlay,
+                            self.width,
+                            self.height,
+                            bx,
+                            72.0,
+                            52.0,
+                            16.0,
+                            11.0,
+                            bg,
+                        );
+                        self.font.draw_text_centered(
+                            &mut self.overlay,
+                            self.width,
+                            self.height,
+                            lbl,
+                            bx,
+                            72.0,
+                            11.5,
+                            col_ink,
+                            no_shadow,
+                            FontWeight::SemiBold,
+                        );
                     }
                 }
                 IslandPage::SystemOverview | IslandPage::Compact => {
-                    let line = format!("CPU {}%   ·   RAM {:.1}/{:.1} GB   ·   Disk {}%", stats.cpu_pct, stats.ram_used_gb, stats.ram_total_gb, stats.disk_pct);
-                    self.font.draw_text_centered(&mut self.overlay, self.width, self.height, &line, cx, 82.0, 13.0, col_ink, no_shadow, FontWeight::SemiBold);
+                    let line = format!(
+                        "CPU {}%   ·   RAM {:.1}/{:.1} GB   ·   Disk {}%",
+                        stats.cpu_pct, stats.ram_used_gb, stats.ram_total_gb, stats.disk_pct
+                    );
+                    self.font.draw_text_centered(
+                        &mut self.overlay,
+                        self.width,
+                        self.height,
+                        &line,
+                        cx,
+                        82.0,
+                        13.0,
+                        col_ink,
+                        no_shadow,
+                        FontWeight::SemiBold,
+                    );
                 }
             }
 
             // Page switcher dots
-            for (i, p) in [IslandPage::Notifications, IslandPage::ControlCenter, IslandPage::SystemOverview].iter().enumerate() {
+            for (i, p) in [
+                IslandPage::Notifications,
+                IslandPage::ControlCenter,
+                IslandPage::SystemOverview,
+            ]
+            .iter()
+            .enumerate()
+            {
                 let dx = cx + (i as f32 - 1.0) * 48.0;
                 let col = if self.page == *p { col_ink } else { col_dim };
-                UIFont::draw_rounded_rect_fill(&mut self.overlay, self.width, self.height, dx, 144.0, if self.page == *p { 10.0 } else { 4.0 }, 3.0, 3.0, col);
+                UIFont::draw_rounded_rect_fill(
+                    &mut self.overlay,
+                    self.width,
+                    self.height,
+                    dx,
+                    144.0,
+                    if self.page == *p { 10.0 } else { 4.0 },
+                    3.0,
+                    3.0,
+                    col,
+                );
             }
         }
 
-        self.renderer.update_overlay(self.width, self.height, &self.overlay);
+        self.renderer
+            .update_overlay(self.width, self.height, &self.overlay);
         let card = GlassSurface::new()
             .material(Material::LiquidGlass)
             .shape(Shape::RoundedRectangle { radius: 22.0 })

@@ -73,7 +73,14 @@ fn main() {
     let mut island = IslandWindow::new(&event_loop, &gpu, screen_w, wp_buf.as_deref(), is_light);
     let mut clock = ClockWindow::new(&event_loop, &gpu, wp_buf.as_deref(), is_light);
     let mut todo = TodoWindow::new(&event_loop, &gpu, screen_w, wp_buf.as_deref(), is_light);
-    let mut dock = DockWindow::new(&event_loop, &gpu, screen_w, screen_h, wp_buf.as_deref(), is_light);
+    let mut dock = DockWindow::new(
+        &event_loop,
+        &gpu,
+        screen_w,
+        screen_h,
+        wp_buf.as_deref(),
+        is_light,
+    );
     let mut launcher = LauncherWindow::new(
         &event_loop,
         &gpu,
@@ -151,9 +158,7 @@ fn main() {
                 return;
             }
             if let WindowEvent::KeyboardInput { event: ref ke, .. } = event {
-                if ke.state == ElementState::Pressed
-                    && ke.logical_key == Key::Named(NamedKey::F2)
-                {
+                if ke.state == ElementState::Pressed && ke.logical_key == Key::Named(NamedKey::F2) {
                     launcher.toggle();
                     return;
                 }
@@ -217,12 +222,22 @@ fn main() {
 
             if last_overlap_check.elapsed() >= Duration::from_secs(2) {
                 last_overlap_check = now;
-                let ov_i = win_os::is_foreground_overlapping(island.pos_x, island.pos_y, island.width as i32, island.height as i32);
+                let ov_i = win_os::is_foreground_overlapping(
+                    island.pos_x,
+                    island.pos_y,
+                    island.width as i32,
+                    island.height as i32,
+                );
                 if ov_i != island.is_window_overlapping {
                     island.is_window_overlapping = ov_i;
                     island.needs_redraw = true;
                 }
-                let ov_c = win_os::is_foreground_overlapping(clock.pos_x, clock.pos_y, clock.width as i32, clock.height as i32);
+                let ov_c = win_os::is_foreground_overlapping(
+                    clock.pos_x,
+                    clock.pos_y,
+                    clock.width as i32,
+                    clock.height as i32,
+                );
                 if ov_c != clock.is_window_overlapping {
                     clock.is_window_overlapping = ov_c;
                     clock.needs_redraw = true;

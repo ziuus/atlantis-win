@@ -95,12 +95,30 @@ impl DockWindow {
             cursor_pos: [-1.0, -1.0],
             hovered_idx: None,
             items: vec![
-                DockItem { icon: "terminal", target: "wt.exe" },
-                DockItem { icon: "browser", target: "msedge.exe" },
-                DockItem { icon: "folder", target: "explorer.exe" },
-                DockItem { icon: "editor", target: "code" },
-                DockItem { icon: "launcher", target: "__launcher__" },
-                DockItem { icon: "settings", target: "ms-settings:" },
+                DockItem {
+                    icon: "terminal",
+                    target: "wt.exe",
+                },
+                DockItem {
+                    icon: "browser",
+                    target: "msedge.exe",
+                },
+                DockItem {
+                    icon: "folder",
+                    target: "explorer.exe",
+                },
+                DockItem {
+                    icon: "editor",
+                    target: "code",
+                },
+                DockItem {
+                    icon: "launcher",
+                    target: "__launcher__",
+                },
+                DockItem {
+                    icon: "settings",
+                    target: "ms-settings:",
+                },
             ],
             needs_redraw: true,
         }
@@ -169,9 +187,17 @@ impl DockWindow {
         let is_light = self.effective_is_light();
         let eff_style = self.effective_style_mode();
         let col = if is_light {
-            if self.pure_bw { [0, 0, 0, 255] } else { [14, 18, 26, 255] }
+            if self.pure_bw {
+                [0, 0, 0, 255]
+            } else {
+                [14, 18, 26, 255]
+            }
         } else {
-            if self.pure_bw { [255, 255, 255, 255] } else { [248, 250, 255, 255] }
+            if self.pure_bw {
+                [255, 255, 255, 255]
+            } else {
+                [248, 250, 255, 255]
+            }
         };
         let step = (self.width as f32 - 48.0) / self.items.len() as f32;
         let cy = self.height as f32 * 0.5;
@@ -179,20 +205,70 @@ impl DockWindow {
         for (i, item) in self.items.iter().enumerate() {
             let cx = 24.0 + step * (i as f32 + 0.5);
             if self.hovered_idx == Some(i) {
-                let bg = if is_light { [0, 0, 0, 22] } else { [255, 255, 255, 34] };
-                UIFont::draw_rounded_rect_fill(&mut self.overlay, self.width, self.height, cx, cy, 22.0, 22.0, 12.0, bg);
+                let bg = if is_light {
+                    [0, 0, 0, 22]
+                } else {
+                    [255, 255, 255, 34]
+                };
+                UIFont::draw_rounded_rect_fill(
+                    &mut self.overlay,
+                    self.width,
+                    self.height,
+                    cx,
+                    cy,
+                    22.0,
+                    22.0,
+                    12.0,
+                    bg,
+                );
             }
             match item.icon {
-                "terminal" => UIFont::draw_terminal_icon(&mut self.overlay, self.width, self.height, cx, cy, col),
-                "browser" => UIFont::draw_browser_icon(&mut self.overlay, self.width, self.height, cx, cy, col),
-                "folder" => UIFont::draw_folder_icon(&mut self.overlay, self.width, self.height, cx, cy, col),
-                "editor" => UIFont::draw_editor_icon(&mut self.overlay, self.width, self.height, cx, cy, col),
-                "settings" => UIFont::draw_settings_icon(&mut self.overlay, self.width, self.height, cx, cy, col),
+                "terminal" => UIFont::draw_terminal_icon(
+                    &mut self.overlay,
+                    self.width,
+                    self.height,
+                    cx,
+                    cy,
+                    col,
+                ),
+                "browser" => UIFont::draw_browser_icon(
+                    &mut self.overlay,
+                    self.width,
+                    self.height,
+                    cx,
+                    cy,
+                    col,
+                ),
+                "folder" => UIFont::draw_folder_icon(
+                    &mut self.overlay,
+                    self.width,
+                    self.height,
+                    cx,
+                    cy,
+                    col,
+                ),
+                "editor" => UIFont::draw_editor_icon(
+                    &mut self.overlay,
+                    self.width,
+                    self.height,
+                    cx,
+                    cy,
+                    col,
+                ),
+                "settings" => UIFont::draw_settings_icon(
+                    &mut self.overlay,
+                    self.width,
+                    self.height,
+                    cx,
+                    cy,
+                    col,
+                ),
                 _ => UIFont::draw_cpu_icon(&mut self.overlay, self.width, self.height, cx, cy, col),
             }
         }
 
-        self.renderer.update_overlay(self.width, self.height, &self.overlay);
+        self.renderer
+            .update_overlay(self.width, self.height, &self.overlay);
         let card = GlassSurface::new()
             .material(Material::LiquidGlass)
             .shape(Shape::Capsule)

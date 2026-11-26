@@ -164,7 +164,10 @@ impl ClockWindow {
             ),
             box_configs: ClockBoxKind::all()
                 .into_iter()
-                .map(|kind| ClockBoxConfig { kind, enabled: true })
+                .map(|kind| ClockBoxConfig {
+                    kind,
+                    enabled: true,
+                })
                 .collect(),
             needs_redraw: true,
         }
@@ -381,7 +384,8 @@ impl ClockWindow {
                             }
                             ClockBoxKind::DisplayBright => {
                                 if px < tcx {
-                                    stats.brightness_pct = stats.brightness_pct.saturating_sub(10).max(5);
+                                    stats.brightness_pct =
+                                        stats.brightness_pct.saturating_sub(10).max(5);
                                 } else {
                                     stats.brightness_pct = (stats.brightness_pct + 10).min(100);
                                 }
@@ -439,9 +443,17 @@ impl ClockWindow {
             let now = Local::now();
             let txt = format!("{}  |  {}%", now.format("%H:%M"), stats.cpu_pct);
             let col = if is_light {
-                if self.pure_bw { [0, 0, 0, 255] } else { [12, 16, 24, 255] }
+                if self.pure_bw {
+                    [0, 0, 0, 255]
+                } else {
+                    [12, 16, 24, 255]
+                }
             } else {
-                if self.pure_bw { [255, 255, 255, 255] } else { [245, 248, 255, 255] }
+                if self.pure_bw {
+                    [255, 255, 255, 255]
+                } else {
+                    [245, 248, 255, 255]
+                }
             };
             self.font.draw_text_centered(
                 &mut self.overlay,
@@ -455,7 +467,8 @@ impl ClockWindow {
                 no_shadow,
                 FontWeight::SemiBold,
             );
-            self.renderer.update_overlay(self.width, self.height, &self.overlay);
+            self.renderer
+                .update_overlay(self.width, self.height, &self.overlay);
             let pill = GlassSurface::new()
                 .material(Material::LiquidGlass)
                 .shape(Shape::Capsule)
@@ -469,16 +482,32 @@ impl ClockWindow {
         }
 
         let vis = self.visible_boxes();
-        let m = if self.customizing { 1.0 } else { self.more_spring.value.clamp(0.0, 1.0) };
+        let m = if self.customizing {
+            1.0
+        } else {
+            self.more_spring.value.clamp(0.0, 1.0)
+        };
         let col_p = if is_light {
-            if self.pure_bw { [0, 0, 0, 255] } else { [10, 14, 22, 255] }
+            if self.pure_bw {
+                [0, 0, 0, 255]
+            } else {
+                [10, 14, 22, 255]
+            }
         } else {
             [255, 255, 255, 255]
         };
         let col_sub = if is_light {
-            if self.pure_bw { [0, 0, 0, 220] } else { [50, 65, 85, 220] }
+            if self.pure_bw {
+                [0, 0, 0, 220]
+            } else {
+                [50, 65, 85, 220]
+            }
         } else {
-            if self.pure_bw { [255, 255, 255, 220] } else { [210, 224, 244, 220] }
+            if self.pure_bw {
+                [255, 255, 255, 220]
+            } else {
+                [210, 224, 244, 220]
+            }
         };
         let now = Local::now();
 
@@ -500,22 +529,61 @@ impl ClockWindow {
                 ClockBoxKind::Connectivity => "CONNECTIVITY".into(),
                 ClockBoxKind::SystemTools => "SYSTEM TOOLS".into(),
             };
-            self.font.draw_text_centered_y(buf, self.width, self.height, &title, tcx - 64.0, tcy - 44.0, 10.0, col_sub, no_shadow, FontWeight::Bold);
+            self.font.draw_text_centered_y(
+                buf,
+                self.width,
+                self.height,
+                &title,
+                tcx - 64.0,
+                tcy - 44.0,
+                10.0,
+                col_sub,
+                no_shadow,
+                FontWeight::Bold,
+            );
             let val = match cfg.kind {
                 ClockBoxKind::Calendar => now.format("%d %b").to_string(),
                 ClockBoxKind::Telemetry => format!("{}%", stats.cpu_pct),
                 ClockBoxKind::Battery => format!("{}%", stats.bat_pct),
                 ClockBoxKind::QuickActions => "Term · Edge · Lock".into(),
-                ClockBoxKind::AudioMedia => if stats.vol_muted { "Muted".into() } else { format!("{}%", stats.vol_pct) },
+                ClockBoxKind::AudioMedia => {
+                    if stats.vol_muted {
+                        "Muted".into()
+                    } else {
+                        format!("{}%", stats.vol_pct)
+                    }
+                }
                 ClockBoxKind::DisplayBright => format!("{}%", stats.brightness_pct),
                 ClockBoxKind::Connectivity => "Wi-Fi · BT".into(),
                 ClockBoxKind::SystemTools => "Shot · Settings".into(),
             };
-            self.font.draw_text_centered_y(buf, self.width, self.height, &val, tcx - 64.0, tcy, 20.0, col_p, no_shadow, FontWeight::Bold);
+            self.font.draw_text_centered_y(
+                buf,
+                self.width,
+                self.height,
+                &val,
+                tcx - 64.0,
+                tcy,
+                20.0,
+                col_p,
+                no_shadow,
+                FontWeight::Bold,
+            );
 
             if self.customizing {
                 let lbl = format!("<  >   {}", if cfg.enabled { "Show" } else { "Hide" });
-                self.font.draw_text_centered(buf, self.width, self.height, &lbl, tcx, tcy + 40.0, 10.0, col_sub, no_shadow, FontWeight::Bold);
+                self.font.draw_text_centered(
+                    buf,
+                    self.width,
+                    self.height,
+                    &lbl,
+                    tcx,
+                    tcy + 40.0,
+                    10.0,
+                    col_sub,
+                    no_shadow,
+                    FontWeight::Bold,
+                );
             }
 
             surfaces.push(
@@ -531,13 +599,56 @@ impl ClockWindow {
 
         let bar_y = self.footer_bar_y();
         if !self.customizing {
-            self.font.draw_text_centered(&mut self.overlay, self.width, self.height, if self.show_more { "Less" } else { "More (4)" }, cx - 58.0, bar_y, 10.0, col_p, no_shadow, FontWeight::SemiBold);
-            surfaces.push(GlassSurface::new().material(Material::LiquidGlass).shape(Shape::Capsule).bounds((cx - 104.0) / sw, (bar_y - 12.0) / sh, 92.0 / sw, 24.0 / sh).style_mode(eff_style).tint(0.0, 0.0, t, if is_light { 1.0 } else { 0.0 }).element_type(27.0));
+            self.font.draw_text_centered(
+                &mut self.overlay,
+                self.width,
+                self.height,
+                if self.show_more { "Less" } else { "More (4)" },
+                cx - 58.0,
+                bar_y,
+                10.0,
+                col_p,
+                no_shadow,
+                FontWeight::SemiBold,
+            );
+            surfaces.push(
+                GlassSurface::new()
+                    .material(Material::LiquidGlass)
+                    .shape(Shape::Capsule)
+                    .bounds((cx - 104.0) / sw, (bar_y - 12.0) / sh, 92.0 / sw, 24.0 / sh)
+                    .style_mode(eff_style)
+                    .tint(0.0, 0.0, t, if is_light { 1.0 } else { 0.0 })
+                    .element_type(27.0),
+            );
         }
-        self.font.draw_text_centered(&mut self.overlay, self.width, self.height, if self.customizing { "Done" } else { "Customize" }, cx + 58.0, bar_y, 10.0, col_p, no_shadow, FontWeight::SemiBold);
-        surfaces.push(GlassSurface::new().material(Material::LiquidGlass).shape(Shape::Capsule).bounds((cx + 12.0) / sw, (bar_y - 12.0) / sh, 92.0 / sw, 24.0 / sh).style_mode(eff_style).tint(0.0, 0.0, t, if is_light { 1.0 } else { 0.0 }).element_type(27.0));
+        self.font.draw_text_centered(
+            &mut self.overlay,
+            self.width,
+            self.height,
+            if self.customizing {
+                "Done"
+            } else {
+                "Customize"
+            },
+            cx + 58.0,
+            bar_y,
+            10.0,
+            col_p,
+            no_shadow,
+            FontWeight::SemiBold,
+        );
+        surfaces.push(
+            GlassSurface::new()
+                .material(Material::LiquidGlass)
+                .shape(Shape::Capsule)
+                .bounds((cx + 12.0) / sw, (bar_y - 12.0) / sh, 92.0 / sw, 24.0 / sh)
+                .style_mode(eff_style)
+                .tint(0.0, 0.0, t, if is_light { 1.0 } else { 0.0 })
+                .element_type(27.0),
+        );
 
-        self.renderer.update_overlay(self.width, self.height, &self.overlay);
+        self.renderer
+            .update_overlay(self.width, self.height, &self.overlay);
         let _ = self.renderer.render(&surfaces);
     }
 }
